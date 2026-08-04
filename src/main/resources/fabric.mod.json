@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "aestria-journal",
+  "version": "${version}",
+  "name": "Aestria Journal",
+  "description": "A dynamic investigation journal for story-driven Minecraft servers.",
+  "authors": [
+    "gbti-network"
+  ],
+  "contributors": [
+    "DrarkaDev",
+    "atwellpub"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+  "license": "MIT",
+  "icon": "assets/travelers-journal/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "com.aestria.journal.AestriaJournal"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.5",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
