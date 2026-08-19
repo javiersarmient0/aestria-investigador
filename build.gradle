@@ -53,6 +53,8 @@ dependencies {
 	testImplementation sourceSets.main.output
 	testImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	testImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	implementation 'com.google.code.gson:gson:2.10.1'
 	
 	// Add test configuration
 	configurations {

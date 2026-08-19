@@ -1,0 +1,14 @@
+{
+  "id": "cultivos",
+  "title": "Los cultivos y las auroras",
+
+  "unlock": {
+    "type": "advancement",
+    "id": "pokeaurora:historia/cultivos"
+  },
+
+  "content": [
+    "Tomás recuerda que cuando las auroras aparecían durante varias noches seguidas los cultivos crecían con mayor fuerza.",
+    "Todavía no existen pruebas científicas."
+  ]
+}

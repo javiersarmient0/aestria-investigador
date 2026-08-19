@@ -1,6 +1,6 @@
-package com.aestria.journal;
+package com.aestria.journal.util;
 
-import com.aestria.journal.FileManager;
+import com.aestria.journal.config.FileManager;
 
 public class FormattedString {
 
