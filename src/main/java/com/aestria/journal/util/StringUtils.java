@@ -5,159 +5,111 @@ import com.aestria.journal.content.JournalCategory;
 import com.aestria.journal.content.JournalDatabase;
 import com.aestria.journal.content.JournalEntry;
 
+import java.util.List;
+
 public class StringUtils {
 
     public static String getBookString() {
-
-        String title = FileManager.journalTitle;
-        String author = FileManager.journalAuthor;
-
-        return createBook(
-                title,
-                author,
-                createMainPage()
-        );
+        return createBook(FileManager.journalTitle, FileManager.journalAuthor, createMainPage());
     }
 
     public static String getHistoryBookString() {
+        return createBook("Diario de Aestria - Historia", FileManager.journalAuthor, createHistoryPage());
+    }
 
-        String title = "Diario de Aestria - Historia";
-        String author = FileManager.journalAuthor;
+    public static String getEntryBookString(JournalEntry entry) {
+        if (entry == null) return getBookString();
 
-        String page = createHistoryPage();
+        StringBuilder page = new StringBuilder();
+        page.append("{\"text\":\"");
+        page.append(escapeJson(entry.getTitle()));
+        page.append("\",\"extra\":[");
 
-        return createBook(
-                title,
-                author,
-                page
-        );
+        List<String> content = entry.getContent();
+        if (content == null || content.isEmpty()) {
+            page.append("{\"text\":\"No hay contenido disponible.\"}");
+        } else {
+            boolean first = true;
+            for (String line : content) {
+                if (!first) page.append(",");
+                first = false;
+                page.append("{\"text\":\"");
+                page.append(escapeJson(line));
+                page.append("\"}");
+            }
+        }
+        page.append("]}");
+
+        return createBook(entry.getTitle(), FileManager.journalAuthor, page.toString());
     }
 
     private static String createMainPage() {
-
         return "{"
-                + "\"text\":\"§b§lDIARIO DE AESTRIA\\n\\n\","
+                + "\"text\":\"DIARIO DE AESTRIA\","
                 + "\"extra\":["
-                + "{\"text\":\"§7Un registro de las investigaciones y descubrimientos de Aestria.\\n\\n\"},"
-
-                + "{\"text\":\"§e§l[ HISTORIA ]\","
-                + "\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/aj historia\"},"
-                + "\"hoverEvent\":{\"action\":\"show_text\",\"contents\":{\"text\":\"Abrir Historia\"}}},"
-
-                + "{\"text\":\"\\n\\n\"},"
-
-                + "{\"text\":\"§a§l[ INVESTIGACIONES ]\","
-                + "\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/aj investigaciones\"},"
-                + "\"hoverEvent\":{\"action\":\"show_text\",\"contents\":{\"text\":\"Abrir Investigaciones\"}}},"
-
-                + "{\"text\":\"\\n\\n\"},"
-
-                + "{\"text\":\"§d§l[ REGIONES ]\","
-                + "\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/aj regiones\"},"
-                + "\"hoverEvent\":{\"action\":\"show_text\",\"contents\":{\"text\":\"Explorar Regiones\"}}}"
-
-                + "]"
-                + "}";
+                + "{\"text\":\"Un registro de las investigaciones y descubrimientos de Aestria.\"},"
+                + "{\"text\":\" [ HISTORIA ]\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/aj historia\"}},"
+                + "{\"text\":\" [ INVESTIGACIONES ]\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/aj investigaciones\"}},"
+                + "{\"text\":\" [ REGIONES ]\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/aj regiones\"}}"
+                + "]}";
     }
 
     private static String createHistoryPage() {
-
         StringBuilder page = new StringBuilder();
+        page.append("{\"text\":\"HISTORIA\",\"extra\":[");
 
-        page.append("{");
-        page.append("\"text\":\"§e§l📖 HISTORIA\\n\\n\"");
-        page.append(",\"extra\":[");
-
-        JournalCategory historyCategory = JournalDatabase.getCategories()
-                .stream()
+        JournalCategory historyCategory = JournalDatabase.getCategories().stream()
                 .filter(category -> category.getId().equals("historia"))
-                .findFirst()
-                .orElse(null);
+                .findFirst().orElse(null);
 
-        if (historyCategory == null) {
-
-            page.append(
-                    "{\"text\":\"§cNo hay investigaciones disponibles.\"}"
-            );
-
+        if (historyCategory == null || historyCategory.getEntries().isEmpty()) {
+            page.append("{\"text\":\"No hay investigaciones disponibles.\"}");
         } else {
-
             boolean first = true;
-
             for (JournalEntry entry : historyCategory.getEntries()) {
-
-                if (!first) {
-                    page.append(",{\"text\":\"\\n\\n\"},");
-                }
-
+                if (!first) page.append(",");
                 first = false;
-
-                page.append("{");
-                page.append("\"text\":\"§f§l");
+                page.append("{\"text\":\"");
                 page.append(escapeJson(entry.getTitle()));
-                page.append("\",");
-                page.append("\"clickEvent\":{");
-                page.append("\"action\":\"run_command\",");
-                page.append("\"value\":\"/aj abrir ");
+                page.append("\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/aj abrir ");
                 page.append(escapeCommand(entry.getId()));
-                page.append("\"}");
-                page.append("}");
+                page.append("\"}}");
             }
         }
 
         page.append("]}");
-
         return page.toString();
     }
 
-    private static String createBook(
-            String title,
-            String author,
-            String page
-    ) {
-
-        return "written_book{"
-                + "title:'" + escape(title) + "',"
-                + "author:'" + escape(author) + "',"
+    private static String createBook(String title, String author, String page) {
+        return "written_book[written_book_content={"
+                + "title:'" + escapeComponentText(title) + "',"
+                + "author:'" + escapeComponentText(author) + "',"
                 + "generation:0,"
-                + "pages:['"
-                + page
-                + "']"
-                + "}";
+                + "pages:['" + escapePageForComponent(page) + "']"
+                + "}]";
     }
 
-    private static String escape(String text) {
-
-        if (text == null) {
-            return "";
-        }
-
-        return text
-                .replace("\\", "\\\\")
-                .replace("'", "\\'");
+    private static String escapeComponentText(String text) {
+        if (text == null) return "";
+        return text.replace("\\", "\\\\").replace("'", "\\'");
     }
 
     private static String escapeJson(String text) {
-
-        if (text == null) {
-            return "";
-        }
-
-        return text
-                .replace("\\", "\\\\")
+        if (text == null) return "";
+        return text.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r");
+                .replace("\n", " ")
+                .replace("\r", " ");
+    }
+
+    private static String escapePageForComponent(String page) {
+        if (page == null) return "{\"text\":\"\"}";
+        return page.replace("\\", "\\\\").replace("'", "\\'");
     }
 
     private static String escapeCommand(String text) {
-
-        if (text == null) {
-            return "";
-        }
-
-        return text
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"");
+        if (text == null) return "";
+        return text.replace("\\", "\\\\").replace("\"", "\\\"").replace("'", "\\'");
     }
 }
